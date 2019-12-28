@@ -78,4 +78,37 @@ public class Presenter {
     void restart() {
         planner.start();
     }
+
+    // 禁止制約挿入処理
+    public void insertProhibitRules(ArrayList<String> targetRules) {
+        if(targetRules.isEmpty()) {
+            // 挿入する禁止制約リストの要素数がゼロの場合の画面反映処理を書く
+
+        } else {
+            planner.attributions.insertProhibitRules(targetRules);
+            // 成功時の画面反映処理を書く
+        }
+    }
+
+    // 禁止制約削除処理
+    public void deleteProhibitRules(ArrayList<String> targetRules) {
+        if(targetRules.isEmpty()) {
+            // 削除する禁止制約リストの要素数がゼロの場合の画面反映処理を書く
+
+        } else {
+            planner.attributions.deleteProhibitRules(targetRules);
+            // 成功時の画面反映処理を書く
+        }
+    }
+
+    // 禁止制約編集処理
+    public void editProhibitRule(String beforeRule, String afterRule) {
+        if(beforeRule == null || afterRule == null) {
+            // 編集前後の禁止制約がnullの場合の画面反映処理を書く
+
+        } else {
+            planner.attributions.editProhibitRules(beforeRule, afterRule);
+            // 成功時の画面反映処理を書く
+        }
+    }
 }

@@ -1323,4 +1323,28 @@ class Attributions {
 		}
 		return checkStates(newStatementList);
 	}
+
+	// 禁止制約を挿入
+	public void insertProhibitRules(ArrayList<String> targetRules) {
+		prohibitRules.addAll(targetRules);
+		prohibitBlockStates.clear();
+		prohibitBlockStates = editStatementList(prohibitRules);
+	}
+
+	// 禁止制約を削除
+	public void deleteProhibitRules(ArrayList<String> targetRules) {
+		for(String targetRule: targetRules) {
+			prohibitRules.remove(targetRule);
+		}
+		prohibitBlockStates.clear();
+		prohibitBlockStates = editStatementList(prohibitRules);
+	}
+
+	// 禁止制約を編集
+	public void editProhibitRules(String beforeRule, String afterRule) {
+		prohibitRules.remove(beforeRule);
+		prohibitRules.add(afterRule);
+		prohibitBlockStates.clear();
+		prohibitBlockStates = editStatementList(prohibitRules);
+	}
 }
