@@ -191,7 +191,9 @@ public class Planner {
 		}
 
 		/**********************オペレータの選択********************************************/
-		goalOp.put(theGoal, null); //ノードをKeyとして保存(Value)は未定値
+		if(!goalOp.containsKey(theGoal)) {
+			goalOp.put(theGoal, -1); //ノードをKeyとして保存(Value)は未定値
+		}
 		//現状態と目標の確認
 		ArrayList<String> cState = new ArrayList<String>();
 		//System.out.println("現在の目標\n" + theGoal);
@@ -206,9 +208,9 @@ public class Planner {
 		int randInt = Math.abs(rand.nextInt()) % operators.size();
   		Operator op = (Operator)operators.get(randInt);
   		cPoint = randInt;
+		//
 
-		/*
-		//3.その他開発用  → おすすめ表示用に！
+		/*3.その他開発用  → おすすめ表示用に！
 		int numRecOp = RecommentOperator(theGoal);
 		Operator opRec = (Operator)operators.get(numRecOp);
 		System.out.println("おすすめは = " + opRec.name);
@@ -252,7 +254,8 @@ public class Planner {
 			//System.out.println("Unify前のp_productKeyOnValue=" + p_productKeyOnValue);
 			Unifier unification = new Unifier();
 			if (unification.unify(theGoal, (String) addList.get(j), theBinding, attributions.keyValueProhibit, p_productKeyOnValue)) {
-				if(goalOp.get(theGoal) != null) {
+				System.out.println("goalOpの要素:"+goalOp.get(theGoal));
+				if(goalOp.get(theGoal) == cPoint) {
 					System.out.println("breakします");
 					break;
 				}
@@ -336,10 +339,10 @@ public class Planner {
 				//オペレータaddリストに,オペレータと一致するものがあれば,
 				Unifier unification = new Unifier();
 				if (unification.unify(theGoal, (String) addList.get(j), theBinding, attributions.keyValueProhibit, p_productKeyOnValue)) {
-					//if(goalOp.get(theGoal) != null) {
-					//	System.out.println("breakします");
-					//	break;
-//					/}
+					if(goalOp.get(theGoal) == i) {
+						System.out.println("breakします");
+						break;
+					}
 					goalOp.put(theGoal, i);
 					System.out.println("goalOp"+goalOp);
 

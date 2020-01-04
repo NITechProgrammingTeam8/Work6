@@ -30,7 +30,7 @@
 \author{グループ8\\
   29114060 後藤 拓也\\
 }
-\date{2020年01月02日}
+\date{2020年01月04日}
 
 \begin{document}
 \maketitle
@@ -280,13 +280,129 @@ Place A on B
 確かに, 「A on C」という禁止制約は存在しないが, 既に「B on C」が存在している状況で, 「A on C」とすることは...物理的に不可能である. そのため, 実行中にも, 禁止制約を随時追加していかなければならないことが分かる. ただ, 「B on C」が確定したのちに「A on C」はダメという禁止制約, 「remove B from on top C」を実行された後には, 「A on C」はダメではないので禁止制約から取り除くといった処理を行うのは, また...大変であり, planningの実装に向けては, かなりゲームフィールの制限を強くするしかないことが分かった. "知識システム"の授業で, 新谷先生が「条件を限定した仮想空間を用いないとプログラムに書ききらないよ」と言っていた内容が良く分かった.
 
 
+\section{必須課題5-2のさらなる改良}
+\subsection{序論}
+上記では, 禁止制約を「X on Y関係」のHashMapを用いることで解決するアプローチを試みた. その際に, 図1で紹介したが, 「AをとってBの上に置く」, 「AをBから取り除く」, 「AをとってBの上に置く」, 「AをBから取り除く」といった無駄な処理をなくす方法として, オペレータの選択に制限をかける必要があると述べた. 今回はそのプログラムを実装してみる.
 
-\subsection{感想}
-前回の内容が行き当たりばったりのプログラムであったので, 今回の修繕にとても時間を要した. 
+\subsection{手法}
+図1でもわかるように, 2階で「holdingB」という目標が設定されていて, その後, 4階でも同じ「holdingB」という目標が出てくる. 4階で2階と同じオペレータ(ここでは, remove X from on top Y)を選択したらどんどんと木は深くなる. そのため, planningAGoalメソッドで設定された1つの目標(木構造におけるノード)と, そのノードに対して選択されたオペレータを保存しておき, 繰り返しを防ぐという方法をとる.
 
-やはり再帰構造のプログラムの処理の流れを把握するには, 木構造を用いるのが一番わかりやすいということが分かった. 木構造を用いることができれば, 2年生の前期に大囿先生から学んだ"知能処理学"の内容や, 加藤先生から学んだ"知識表現と推論"がとても生きてくることが分かり, 今までの総復習をしながら今回の課題に取り組むことができてよかった. \\
-先生に最後にお願いしたいこととしては, ぜひ次の世代の子にも, 今回自分が取り組んだPlannningの木構造表現方法を勧めてほしい. 欲を言えば, これを一つの課題にしてもらえると, バックトラックを用いたプランニングの全体概要が面白いようにわかると思う. このプランニングの実行過程に関しては, "知能プログラミング入門"の教科書に詳しくのっていなかったため, プランニングの内部構造をしっかり理解できているのが, グループの中でも僕だけで, 今回の課題もだいぶしんどかった. 木構造で表現することで, もう少し,グループ内で, プランニングの処理の流れを共有し, 役割分担しやすくなると思う. さらに言えば, 今回自分は時間がなかったのでできなかったが, プログラム実行しながら, この木構造を表現するGUIがあると, もっと直観的にわかりやすくなるとも思った. これは来年度の発展課題にしてもらえると面白いかもしれない.
+\subsection{実装}
+Plannerクラスに, 1つの目標(木構造におけるノード)とその時に選択されたオペレータの対応関係を保存するHashMap:goalOpを作成. Keyには目標, Valueにはオペレータのインデント[0～3]を保存する. (オペレータの選択とインデントの関係に関しては, 課題5のレポートを参照してもらいたい.)
 
+\begin{lstlisting}[caption=目標とオペレータの対応関係の保存, label=src:No1]
+//Plannerクラス
+  HashMap<String, Integer> goalOp;	//Key:単目標/Value:オペレータの番号
+//コンストラクタ
+  goalOp = new HashMap<String, Integer>();
+
+//planningAGoalメソッド内
+  //1.stateリストとの照らし合わせ処理(省略) 
+  //2.ノードをKeyとして保存(Value)は未定値
+  if(!goalOp.containsKey(theGoal)) {
+    goalOp.put(theGoal, -1);
+  }
+  //3.operatorの選択(ランダム)
+  int randInt = Math.abs(rand.nextInt())\%operators.size();
+  Operator op = (Operator)operators.get(randInt);
+  cPoint = randInt;
+  //4-1.選択したオペレータの実行(一部省略)
+  Operator anOperator = rename((Operator) operators.get(cPoint));
+  for (int j = 0; j < addList.size(); j++) {
+    Unifier unification = new Unifier();
+    if(unification.unify(theGoal, (String) addList.get(j), theBinding, attributions.keyValueProhibit, p_productKeyOnValue)) {
+      //5.一度は選択されていたら,break
+      if(goalOp.get(theGoal) == cPoint) {
+        System.out.println("breakします");
+	  break;
+      }
+      //6.breakしなかったら, 保存する
+      goalOp.put(theGoal, cPoint);
+      System.out.println("goalOp"+goalOp);
+	...
+  //4-2.選択されたオペレータが実行されない場合,
+  for (int i = 0; i < operators.size(); i++) {
+    if(i != cPoint) {
+    anOperator = rename((Operator) operators.get(i));
+    addList = (ArrayList<String>) anOperator.getAddList();
+    for (int j = 0; j < addList.size(); j++) {
+      Unifier unification = new Unifier();
+	if(unification.unify(theGoal, (String) addList.get(j), theBinding, attributions.keyValueProhibit, p_productKeyOnValue)) {
+     //5.既にその目標に対してオペレータが選択されていたら,
+	  if(goalOp.get(theGoal) == i) {
+             System.out.println("breakします");
+		break;
+          }
+     //6.保存する
+	goalOp.put(theGoal, i);
+	System.out.println("goalOp"+goalOp);
+	...
+\end{lstlisting}
+
+選択したオペレータが実際に実行されるか, それとも別のオペレータが実行されるかに関しては, 課題5のレポートを参考にしてもらいたい.
+
+planningAGoalメソッドが実行されたら, まず, HashMap:goalOpにその目標がKeyとして設定されていない場合は, Valueを-1としておく. それ以前にすでにその目標がKeyとして保存されていたら, -1の初期化は行わない. その後, 実際に, オペレータのadd部とunifyをしていき, 成功したら, そのオペレータのインデントをgoalOpのValueに加える(上書き保存する). すでにその目標に対して, 以前実行されたオペレータがあり, 保存されていたら(つまり-1ではなかったら), 別のオペレータを探すためにfor文をbreakし, 下の"選択されたオペレータ以外のオペレータの実行" へ移動する. そこで, 一度も選択されていないオペレータだったら, そのオペレータを実行する.
+
+\subsection{実行結果}
+\begin{lstlisting}[caption=goalOpによって制約される , label=src:No1]
+[B on C, A on B]
+*** GOALS ***[B on C, A on B]
+**B on C
+Place ?x0 on ?y0
+goalOp{B on C=0}
+*** GOALS ***[clear C, holding B]
+**clear C
+theBinding{?y0=C, ?x0=B}
+*** GOALS ***[holding B]
+**holding B
+remove ?x1 from on top ?y1
+goalOp{holding B=1, B on C=0}
+オペレータの具体化:remove B from on top ?y1
+*** GOALS ***[B on ?y1, clear B, handEmpty]
+**B on ?y1
+Place ?x2 on ?y2
+goalOp{holding B=1, B on C=0, B on ?y1=0}
+オペレータの具体化:Place B on ?y2
+*** GOALS ***[clear ?y2, holding B]
+**clear ?y2
+theBinding{?y0=C, ?x0=B, ?y1=C, ?x1=B, ?y2=C, ?x2=B}
+*** GOALS ***[holding B]
+**holding B
+Place ?x3 on ?y3
+そのオペレータは実行できません
+remove ?x4 from on top ?y4
+breakします
+pick up ?x5 from the table
+オペレータの具体化:pick up B from the table
+*** GOALS ***[ontable B, clear B, handEmpty]
+**ontable B
+theBinding{?y0=C, ?x0=B, ?y1=C, ?x1=B, ?y2=C, ?x2=B, ?x4=B, ?x5=B}
+*** GOALS ***[clear B, handEmpty]
+**clear B
+theBinding{?y0=C, ?x0=B, ?y1=C, ?x1=B, ?y2=C, ?x2=B, ?x4=B, ?x5=B}
+*** GOALS ***[handEmpty]
+**handEmpty
+theBinding{?y0=C, ?x0=B, ?y1=C, ?x1=B, ?y2=C, ?x2=B, ?x4=B, ?x5=B}
+Success !
+Success !
+Success !
+...
+\end{lstlisting}
+
+「holdingB」が2回目の目標として設定された際に, 「Place ?x3 on ?y3」のオペレータを選択しているが, add文には「holdingX」が存在しないので, 次のオペレータを探す. すると, 「remove ?x4 from on top ?y4」が選択されるが, goalOpにすでに{holding B=1}と保存されているので, インデント1のremoveオペレータは実行されない. その後, 「pick up ?x5 from the table」が実行され, 成功していることが分かる.
+
+\subsection{考察}
+このプログラムにより, オペレータの選択をランダムにしても, 無駄な処理(AをBの上に置いて, AをBから取り除いて, またAをBの上において...など)はなくなった. 完璧なプログラムかといえば, 結局, 「Place A on C」という前に述べた"物理的に不可能な置き方"が残ってしまったので, 残念である. また, "机に置いてある3つの積み木(A, B, C)を順に上に積んでいく"という処理しかできなくなり, 汎用性がなくなってしまった.　本当は積み木が4つになって, 初期状態がどうであれ, 最終的な目標状態がどうであれ, 適切なオペレータ選択ができればよかったが, なかなか難しい...
+
+\section{感想}
+前回の内容が行き当たりばったりのプログラムであったので, 今回の修繕にとても時間を要した. 具体的なエラーに対して対処しても次のエラーが生じて, 全てのエラーを直すのに本当に時間がかかってしまった. 汎用性の高いプログラムを作るには, もっとさまざまなパターンを頭の中でイメージしないといけないので, やはり難しい.
+
+再帰構造のプログラムの処理の流れを把握するには, やはり木構造を用いるのが一番わかりやすいということが分かった. 木構造を用いることができれば, 2年生の前期に大囿先生から学んだ"知能処理学"の内容や, 加藤先生から学んだ"知識表現と推論"がとても生きてくることが分かり, 今までの総復習をしながら今回の課題に取り組むことができてよかった. \\
+先生に最後にお願いしたいこととしては, ぜひ次の世代の子にも, 今回自分が取り組んだPlannningの木構造表現方法を勧めてほしい. 欲を言えば, これを一つの課題にしてもらえると, バックトラックを用いたプランニングの全体概要が面白いようにわかると思う. この3.3章のプランニングの実行過程に関しては, "知能プログラミング入門"の教科書に詳しくのっていなかったため, プランニングの内部構造をしっかり理解できているのが, グループの中でも僕だけで, 今回の課題もだいぶしんどかった. 木構造で表現することで, もう少し,グループ内で, プランニングの処理の流れを共有し, 役割分担しやすくなると思う. さらに言えば, 今回自分は時間がなかったのでできなかったが, プログラム実行しながら, この木構造を表現するGUIがあると, もっと直観的にわかりやすくなるとも思った. これは来年度の発展課題にしてもらえると面白いかもしれない.\\
+
+最後に, この知能系演習を通して, たくさんの経験を積むことができた. ここまで6つの課題を最後まで一緒に取り組んでくれたグループのメンバーには本当に感謝する. また, 今まで教えてくださった知能系の先生方にも感謝し申し上げます.
+
+ "知識"とは"データの関連"であり, "推論"とは, "知識を利用して結論を導くこと"である. この3年間で人工知能の本質を経験することができた. ありがとうございました.
 
 %%%%%%%%%%%%%%%%%% 参考文献 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{thebibliography}{99}
