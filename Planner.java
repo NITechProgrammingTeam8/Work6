@@ -21,6 +21,11 @@ public class Planner {
 	ArrayList<String> planResult;
 	ArrayList<Operator> planUnifiedResult;
 	HashMap<String, String> p_productKeyOnValue;
+	//記憶用変数
+	//ArrayList<Integer> opIndex;
+	//ArrayList<String> mGoal;
+	//ArrayList<ArrayList<String>> mState;
+	HashMap<String, Integer> goalOp;	//Key:単目標/Value:オペレータの番号
 
 	public static void main(String argv[]) {
 		(new Planner()).start();
@@ -30,6 +35,7 @@ public class Planner {
 		rand = new Random();
 		initOperators();
 		attributions = new Attributions();
+		goalOp = new HashMap<String, Integer>();
 
 		//AttributesクラスからPlannerクラスへ
 		setHashMap(attributions.a_productKeyOnValue);
@@ -91,6 +97,11 @@ public class Planner {
 	}
 
 	private boolean planning(ArrayList<String> theGoalList, ArrayList<String> theCurrentState, HashMap theBinding) {
+		//繰り返し処理用変数のコンストラクタ生成
+		//opIndex = new ArrayList<Integer>();
+		//mGoal = new ArrayList<String>();
+		//mState = new ArrayList<ArrayList<String>>();
+
 		System.out.println("*** GOALS ***" + theGoalList);
 		if (theGoalList.size() == 1) {
 			String aGoal = (String) theGoalList.get(0);
@@ -164,14 +175,12 @@ public class Planner {
 		for (int i = 0; i < size; i++) {
 			String aState = (String) theCurrentState.get(i);
 
-			//System.out.println("Unify前のp_productKeyOnValue=" + p_productKeyOnValue);
 			//現在のKeyOnValueリストをUnifierクラスからもらってくるため
 			Unifier unification = new Unifier();
 			if (unification.unify(theGoal, aState, theBinding, attributions.keyValueProhibit, p_productKeyOnValue)) {
 				System.out.println("theBinding" + theBinding);
 
 				//UnifierからもらったKeyOnValueリストを,Plannerクラスに保存
-				//for(HashMap.Entry<String, String> entry : unification.getHashMap().entrySet()){
 				for(String str : unification.getHashMap().keySet()) {
 					System.out.println("その1");
 					System.out.println("Key = " + str + " Value = " + unification.getHashMap().get(str));
@@ -182,27 +191,23 @@ public class Planner {
 		}
 
 		/**********************オペレータの選択********************************************/
-		//1.ランダム用
-		//
-		int randInt = Math.abs(rand.nextInt()) % operators.size();
-  		Operator op = (Operator)operators.get(randInt);
-  		cPoint = randInt;
-  		// ↓あれ...ここって...
-		//operators.remove(randInt);
-		//operators.add(op);
-
-
-		/*
-		//現状態と目標の表示
+		goalOp.put(theGoal, null); //ノードをKeyとして保存(Value)は未定値
+		//現状態と目標の確認
+		ArrayList<String> cState = new ArrayList<String>();
 		//System.out.println("現在の目標\n" + theGoal);
-		System.out.println("現在の状態\n" + theCurrentState);
+		//System.out.println("現在の状態");
 		for(int i = 0; i< theCurrentState.size(); i++) {
 			if(!theCurrentState.get(i).contains("?")) {
+				cState.add(theCurrentState.get(i));
 				//System.out.println(theCurrentState.get(i));
 			}
 		}
+		//1.ランダム用
+		int randInt = Math.abs(rand.nextInt()) % operators.size();
+  		Operator op = (Operator)operators.get(randInt);
+  		cPoint = randInt;
 
-		//
+		/*
 		//3.その他開発用  → おすすめ表示用に！
 		int numRecOp = RecommentOperator(theGoal);
 		Operator opRec = (Operator)operators.get(numRecOp);
@@ -247,6 +252,13 @@ public class Planner {
 			//System.out.println("Unify前のp_productKeyOnValue=" + p_productKeyOnValue);
 			Unifier unification = new Unifier();
 			if (unification.unify(theGoal, (String) addList.get(j), theBinding, attributions.keyValueProhibit, p_productKeyOnValue)) {
+				if(goalOp.get(theGoal) != null) {
+					System.out.println("breakします");
+					break;
+				}
+				goalOp.put(theGoal, cPoint);
+				System.out.println("goalOp"+goalOp);
+
 				//UnifierからもらったKeyOnValueリストを,Plannerクラスに保存
 				for(String str : unification.getHashMap().keySet()) {
 					System.out.println("その2");
@@ -322,12 +334,16 @@ public class Planner {
 			addList = (ArrayList<String>) anOperator.getAddList();
 			for (int j = 0; j < addList.size(); j++) {
 				//オペレータaddリストに,オペレータと一致するものがあれば,
-				//System.out.println("Unify前のp_productKeyOnValue=" + p_productKeyOnValue);
 				Unifier unification = new Unifier();
 				if (unification.unify(theGoal, (String) addList.get(j), theBinding, attributions.keyValueProhibit, p_productKeyOnValue)) {
+					//if(goalOp.get(theGoal) != null) {
+					//	System.out.println("breakします");
+					//	break;
+//					/}
+					goalOp.put(theGoal, i);
+					System.out.println("goalOp"+goalOp);
+
 					//UnifierからもらったKeyOnValueリストを,Plannerクラスに保存
-					//System.out.println("attributions.keyValueProhibit" + attributions.keyValueProhibit);
-					//System.out.println("サイズ=" + unification.getHashMap().size());
 					for(String str : unification.getHashMap().keySet()) {
 						System.out.println("その3");
 						System.out.println("Key = " + str + " Value = " + unification.getHashMap().get(str));
@@ -338,12 +354,11 @@ public class Planner {
 					//そのオペレータのIF部を副目標として加え,
 					ArrayList<String> newGoals = (ArrayList<String>) newOperator.getIfList();
 					System.out.println("オペレータの具体化:" +newOperator.name);
-					//System.out.println("その時の状態:" + theCurrentState);
+
 					//その副目標が達成されたら,
 					if (planning(newGoals, theCurrentState, theBinding)) {
 						//System.out.println("副目標達成\n" + newOperator.name);
 						//そのオペレータを加え,
-						//System.out.println("newOperator = " + newOperator);
 						plan.add(newOperator);
 						//状態を変更
 						theCurrentState = newOperator.applyState(theCurrentState);
@@ -351,7 +366,6 @@ public class Planner {
 						//まっす～の"禁止制約をはじくメソッド"追加
 						theCurrentState = attributions.checkStates(theCurrentState);
 						/**********************************************************************************/
-
 						return i + 1;
 					} else {
 						// 失敗したら元に戻す．
