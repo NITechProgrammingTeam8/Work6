@@ -456,9 +456,11 @@ public class Planner {
 		return goalList;
 	}
 
-	//目標状態を問題が起こらないように並べ替える（課題５−1）
-	public ArrayList<String> sortGoalList(ArrayList<String> goalList){
+	// 目標状態を問題が起こらないように並べ替える（課題５−1）
+	public static ArrayList<String> sortGoalList(ArrayList<String> goalList) {
 		ArrayList<String> sortedGoalList = new ArrayList<String>();
+
+		//sortedGoalListに目標状態を格納
 		for(String s : goalList) {
 			sortedGoalList.add(s);
 		}
@@ -472,20 +474,35 @@ public class Planner {
 				head[i] = sortedGoalList.get(i).substring(0,1);
 				tail[i] = sortedGoalList.get(i).substring(sortedGoalList.get(i).length()-1);
 			}
+			
+
+			/*headとtailを出力
+			for(int i = 0; i < head.length; i++) {
+				System.out.println("head["+i+"]"+head[i]);
+				System.out.println("tail["+i+"]"+tail[i]);
+				System.out.println();
+			}
+			*/
+
 
 			int flag = 0;
+			//System.out.println(0);
 			for(int i = 0; i < sortedGoalList.size(); i++){
+				//System.out.println(1);
 				for(int j = i; j < sortedGoalList.size()-i; j++){
-					if(tail[i] == head[j]){
+					//System.out.println(2);
+					if(tail[i].equals(head[j])){
+						//System.out.println(3);
 						sortedGoalList.add(j+1, sortedGoalList.get(i));
 						sortedGoalList.remove(i);
+						//System.out.println("i="+i+" j="+j+" list= "+sortedGoalList);
 						flag += 1;
 						break;
 					}
 				}
 				if(flag == 1){
 					break;
-				}
+				}			
 			}
 			if(flag == 0){
 				break;
