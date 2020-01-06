@@ -62,6 +62,9 @@ public class Planner {
 	}
 
 	public void start() {
+		//AttributesクラスからPlannerクラスへ
+		setHashMap(attributions.a_productKeyOnValue);
+
 		HashMap<String, String> theBinding = new HashMap();
 		plan = new ArrayList<Operator>();
 		System.out.println("goalList = \n" + goalList);
@@ -474,7 +477,7 @@ public class Planner {
 				head[i] = sortedGoalList.get(i).substring(0,1);
 				tail[i] = sortedGoalList.get(i).substring(sortedGoalList.get(i).length()-1);
 			}
-			
+
 
 			/*headとtailを出力
 			for(int i = 0; i < head.length; i++) {
@@ -502,7 +505,7 @@ public class Planner {
 				}
 				if(flag == 1){
 					break;
-				}			
+				}
 			}
 			if(flag == 0){
 				break;
@@ -1229,5 +1232,26 @@ class Attributions {
 			System.out.println(statement+" =====> "+newStatement);
 		}
 		return checkStates(newStatementList);
+	}
+
+	public void insertProhibitRules(ArrayList<String> targetRules) {
+		prohibitRules.addAll(targetRules);
+		prohibitBlockStates.clear();
+		prohibitBlockStates = editStatementList(prohibitRules);
+	}
+
+	public void deleteProhibitRules(ArrayList<String> targetRules) {
+		for(String targetRule: targetRules) {
+			prohibitRules.remove(targetRule);
+		}
+		prohibitBlockStates.clear();
+		prohibitBlockStates = editStatementList(prohibitRules);
+	}
+
+	public void editProhibitRules(String beforeRule, String afterRule) {
+		prohibitRules.remove(beforeRule);
+		prohibitRules.add(afterRule);
+		prohibitBlockStates.clear();
+		prohibitBlockStates = editStatementList(prohibitRules);
 	}
 }

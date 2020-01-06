@@ -88,6 +88,9 @@ public class PGUI extends JFrame implements ActionListener{
   static ArrayList<String> prohibitRules;
   Timer timer;
   int time;
+  JTextField tuihen;
+  JTextField maemae;
+  JTextField atoato;
 
   public static void main(String[] args){
 	  // 画像の定義
@@ -193,12 +196,16 @@ public class PGUI extends JFrame implements ActionListener{
 	  gIS = presenter.getInitialState();
 	  // 禁止制約の格納
 	  prohibitRules = new ArrayList<>();
-	  prohibitRules.add("box on pyramid");
-	  prohibitRules.add("box on ball");
-	  prohibitRules.add("ball on pyramid");
-	  prohibitRules.add("pyramid on ball");
-	  prohibitRules.add("trapezoid on pyramid");
+	  prohibitRules.add("ball on ball");
 	  prohibitRules.add("trapezoid on ball");
+	  prohibitRules.add("trapezoid on trapezoid");
+	  prohibitRules.add("box on ball");
+	  prohibitRules.add("box on box");
+	  prohibitRules.add("pyramid on ball");
+	  prohibitRules.add("ball on pyramid");
+	  prohibitRules.add("box on pyramid");
+	  prohibitRules.add("trapezoid on pyramid");
+	  prohibitRules.add("pyramid on pyramid");
 	  // 2ページ目以降のカード作成用メソッド
 	  createResultPage(pUR);
 	  // ボタンの作成メソッド
@@ -303,6 +310,7 @@ public class PGUI extends JFrame implements ActionListener{
     // 探索開始
     presenter.restart();
     pUR = presenter.getStepList();
+    //pUR = null; // 【仮】実験用
     result = presenter.getPlan();
     if (result != null) {
     	results = new ArrayList<>(result);
@@ -491,6 +499,85 @@ public class PGUI extends JFrame implements ActionListener{
 	        lastButton.setEnabled(true);
 	        timer.stop();
     		time = 0;
+    	}
+    } else if (cmd.equals("insert")){
+    	if (nodata.equals(tuihen.getText())) {
+    		JPanel msg = new JPanel();
+    	    msg.setLayout(new BoxLayout(msg, BoxLayout.PAGE_AXIS));
+    	    JLabel msg1 = new JLabel("NO DATA");
+    	    msg1.setForeground(Color.RED);
+    	    JLabel msg2 = new JLabel("Write insert Prohibit Rules");
+    	    msg.add(msg1);
+    	    msg.add(msg2);
+    	    JOptionPane.showMessageDialog(this, msg);
+    	} else {
+    		String str = tuihen.getText();
+    		prohibitRules.add(str);
+    		ArrayList<String> cash = new ArrayList<>();
+    		cash.add(str);
+    		presenter.insertProhibitRules(cash);
+    		JPanel msg = new JPanel();
+    	    msg.setLayout(new BoxLayout(msg, BoxLayout.PAGE_AXIS));
+    	    JLabel msg1 = new JLabel("Insert completed");
+    	    //JLabel msg2 = new JLabel("Go on to the next page!");
+    	    msg.add(msg1);
+    	    //msg.add(msg2);
+    	    JOptionPane.showMessageDialog(this, msg);
+    	    // テキストフィールドの初期化
+    	    tuihen.setText(nodata);
+    	}
+    } else if (cmd.equals("delete")){
+    	if (nodata.equals(tuihen.getText())) {
+    		JPanel msg = new JPanel();
+    	    msg.setLayout(new BoxLayout(msg, BoxLayout.PAGE_AXIS));
+    	    JLabel msg1 = new JLabel("NO DATA");
+    	    msg1.setForeground(Color.RED);
+    	    JLabel msg2 = new JLabel("Write delete Prohibit Rules");
+    	    msg.add(msg1);
+    	    msg.add(msg2);
+    	    JOptionPane.showMessageDialog(this, msg);
+    	} else {
+    		String str = tuihen.getText();
+    		prohibitRules.remove(prohibitRules.indexOf(str));
+    		ArrayList<String> cash = new ArrayList<>();
+    		cash.add(str);
+    		presenter.deleteProhibitRules(cash);
+    		JPanel msg = new JPanel();
+    	    msg.setLayout(new BoxLayout(msg, BoxLayout.PAGE_AXIS));
+    	    JLabel msg1 = new JLabel("Delete completed");
+    	    //JLabel msg2 = new JLabel("Go on to the next page!");
+    	    msg.add(msg1);
+    	    //msg.add(msg2);
+    	    JOptionPane.showMessageDialog(this, msg);
+    	    // テキストフィールドの初期化
+    	    tuihen.setText(nodata);
+    	}
+    } else if (cmd.equals("edit")){
+    	if (nodata.equals(maemae.getText()) || nodata.equals(atoato.getText())) {
+    		JPanel msg = new JPanel();
+    	    msg.setLayout(new BoxLayout(msg, BoxLayout.PAGE_AXIS));
+    	    JLabel msg1 = new JLabel("NO DATA");
+    	    msg1.setForeground(Color.RED);
+    	    JLabel msg2 = new JLabel("Write edit Prohibit Rules");
+    	    msg.add(msg1);
+    	    msg.add(msg2);
+    	    JOptionPane.showMessageDialog(this, msg);
+    	} else {
+    		String str1 = maemae.getText();
+    		String str2 = atoato.getText();
+    		prohibitRules.remove(prohibitRules.indexOf(str1));
+    		prohibitRules.add(str2);
+    		presenter.editProhibitRule(str1, str2);
+    		JPanel msg = new JPanel();
+    	    msg.setLayout(new BoxLayout(msg, BoxLayout.PAGE_AXIS));
+    	    JLabel msg1 = new JLabel("Edit completed");
+    	    //JLabel msg2 = new JLabel("Go on to the next page!");
+    	    msg.add(msg1);
+    	    //msg.add(msg2);
+    	    JOptionPane.showMessageDialog(this, msg);
+    	    // テキストフィールドの初期化
+    	    maemae.setText(nodata);
+    	    atoato.setText(nodata);
     	}
     }
 
@@ -974,7 +1061,7 @@ public class PGUI extends JFrame implements ActionListener{
 		  kari.setLayout(new BorderLayout());
 		  kari.add(hosoku, BorderLayout.CENTER);
 		  prohibit.add(kari);
-		  prohibit.add(Box.createRigidArea(new Dimension(20,20)));
+		  prohibit.add(Box.createRigidArea(new Dimension(10,10)));
 		  // 禁止制約のパネルの表示方法
 		  // 属性名
 		  JPanel prohibit2_1 = new JPanel();
@@ -1003,6 +1090,42 @@ public class PGUI extends JFrame implements ActionListener{
 		  an.add( new JLabel("(Name & Shape)") );
 		  AN.add(an);
 		  AN.add(scrollpane1);
+
+		  JPanel comment = new JPanel();
+		  comment.setLayout(new BoxLayout(comment, BoxLayout.PAGE_AXIS)); // 縦
+		  JPanel tuikasakujyo = new JPanel();
+		  tuikasakujyo.setLayout(new BoxLayout(tuikasakujyo, BoxLayout.LINE_AXIS)); // 横
+		  JPanel hensyu = new JPanel();
+		  hensyu.setLayout(new BoxLayout(hensyu, BoxLayout.LINE_AXIS)); // 横
+		  tuihen = new JTextField();
+		  tuihen.setColumns(15);
+		  JButton tuika = new JButton("insert");
+		  tuika.addActionListener(this);
+		  tuika.setActionCommand("insert");
+		  JButton sakuyjyo = new JButton("delete");
+		  sakuyjyo.addActionListener(this);
+		  sakuyjyo.setActionCommand("delete");
+		  tuikasakujyo.add(tuihen);
+		  tuikasakujyo.add(tuika);
+		  tuikasakujyo.add(sakuyjyo);
+		  maemae = new JTextField();
+		  maemae.setColumns(5);
+		  atoato = new JTextField();
+		  atoato.setColumns(5);
+		  JLabel yajirusi = new JLabel();
+		  yajirusi.setText("  →  ");
+		  JButton hen = new JButton("edit");
+		  hen.addActionListener(this);
+		  hen.setActionCommand("edit");
+		  hensyu.add(maemae);
+		  hensyu.add(yajirusi);
+		  hensyu.add(atoato);
+		  hensyu.add(hen);
+		  comment.add(tuikasakujyo);
+		  comment.add(hensyu);
+		  prohibit.add(comment);
+
+
 		  // 禁止制約
 		  JPanel prohibit2 = new JPanel();
 		  prohibit2.setLayout(new BoxLayout(prohibit2, BoxLayout.PAGE_AXIS));

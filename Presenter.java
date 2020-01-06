@@ -1,4 +1,5 @@
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Presenter {
     private Planner planner;
@@ -73,42 +74,45 @@ public class Presenter {
         planner.attributions = new Attributions(attributions);
         return planner.attributions.attributions;
     }
-    
+
     // セットした内容で再実行
     void restart() {
         planner.start();
     }
 
     // 禁止制約挿入処理
-    public void insertProhibitRules(ArrayList<String> targetRules) {
+    public int insertProhibitRules(ArrayList<String> targetRules) {
         if(targetRules.isEmpty()) {
             // 挿入する禁止制約リストの要素数がゼロの場合の画面反映処理を書く
-
+        	return 0;
         } else {
             planner.attributions.insertProhibitRules(targetRules);
             // 成功時の画面反映処理を書く
+            return 1;
         }
     }
 
     // 禁止制約削除処理
-    public void deleteProhibitRules(ArrayList<String> targetRules) {
+    public int deleteProhibitRules(ArrayList<String> targetRules) {
         if(targetRules.isEmpty()) {
             // 削除する禁止制約リストの要素数がゼロの場合の画面反映処理を書く
-
+        	return 0;
         } else {
             planner.attributions.deleteProhibitRules(targetRules);
             // 成功時の画面反映処理を書く
+            return 1;
         }
     }
 
     // 禁止制約編集処理
-    public void editProhibitRule(String beforeRule, String afterRule) {
+    public int editProhibitRule(String beforeRule, String afterRule) {
         if(beforeRule == null || afterRule == null) {
             // 編集前後の禁止制約がnullの場合の画面反映処理を書く
-
+        	return 0;
         } else {
             planner.attributions.editProhibitRules(beforeRule, afterRule);
             // 成功時の画面反映処理を書く
+            return 1;
         }
     }
 }
